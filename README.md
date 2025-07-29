@@ -736,4 +736,12 @@
                 } else if (lowerInput.includes('adiós') || lowerInput.includes('hasta luego') || lowerInput.includes('chau') || lowerInput.includes('nos vemos')) {
                     response = this.getRandomResponse(responses.despedida);
                 } else if (lowerInput.includes('gracias')) {
-                    response = "¡De nada! Es un placer poder ayudarte.
+                    response = "¡De nada! Es un placer poder ayudarte. ¿Hay algo más en lo que pueda asistirte?";
+                } else if (lowerInput.includes('ayuda') || lowerInput.includes('qué puedes hacer')) {
+                    response = "Puedo ayudarte con muchas cosas: decirte la hora, contarte chistes, conversar contigo, darte información básica. Solo di 'Hola Claude' seguido de lo que necesites.";
+                } else {
+                    response = `Entiendo que me dices "${input}". Aunque soy una versión simulada, estoy aquí para conversar contigo. ¿Podrías ser más específico sobre lo que necesitas?`;
+                }
+                
+                this.logDebug(`Respuesta generada: "${response}"`);
+                return response;
