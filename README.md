@@ -282,6 +282,8 @@
                 this.isListening = false;
                 this.isSpeaking = false;
                 this.spanishVoice = null;
+                this.lastTranscript = '';
+                this.processedLastTranscript = false;
                 
                 this.initElements();
                 this.setupSpeechRecognition();
@@ -349,21 +351,28 @@
                     this.recognition.onresult = (event) => {
                         let transcript = '';
                         let isFinal = false;
+                        let confidence = 0;
 
                         for (let i = event.resultIndex; i < event.results.length; i++) {
                             transcript += event.results[i][0].transcript;
+                            confidence = event.results[i][0].confidence || 0;
                             if (event.results[i].isFinal) {
                                 isFinal = true;
                             }
                         }
 
-                        this.logDebug(`📝 Transcripción: "${transcript}" (final: ${isFinal})`);
+                        this.logDebug(`📝 Transcripción: "${transcript}" (final: ${isFinal}, confianza: ${confidence.toFixed(2)})`);
                         
                         if (transcript.trim()) {
+                            this.lastTranscript = transcript.trim();
+                            this.processedLastTranscript = false;
                             this.updateStatus(`Escuché: "${transcript}"`);
                             
-                            if (isFinal) {
+                            // Procesar si es final O si tiene suficiente contenido y confianza
+                            if (isFinal || (transcript.trim().length > 10 && confidence > 0.7)) {
+                                this.logDebug(`✅ Procesando transcripción: "${transcript}"`);
                                 this.processUserInput(transcript.trim());
+                                this.processedLastTranscript = true;
                             }
                         }
                     };
@@ -400,6 +409,13 @@
                         this.claudeIndicator.classList.remove('listening');
                         this.claudeIndicator.textContent = '🎤';
                         this.logDebug('🎤 Reconocimiento terminado');
+                        
+                        // Si no se procesó nada y hay transcripción pendiente, procesarla
+                        if (this.lastTranscript && this.lastTranscript.length > 5 && !this.processedLastTranscript) {
+                            this.logDebug(`🔄 Procesando transcripción pendiente: "${this.lastTranscript}"`);
+                            this.processUserInput(this.lastTranscript);
+                            this.processedLastTranscript = true;
+                        }
                         
                         if (!this.isSpeaking) {
                             this.updateStatus('✅ Listo para escuchar de nuevo');
@@ -552,6 +568,10 @@
                     this.logDebug('⚠️ No se puede iniciar escucha: recognition=' + !!this.recognition + ', isListening=' + this.isListening + ', isSpeaking=' + this.isSpeaking);
                     return;
                 }
+                
+                // Reset variables
+                this.lastTranscript = '';
+                this.processedLastTranscript = false;
                 
                 try {
                     this.recognition.start();
