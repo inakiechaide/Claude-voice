@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claude - Asistente de Voz Automático</title>
+    <title>Claude - Asistente de Voz Simple</title>
     <style>
         * {
             margin: 0;
@@ -36,7 +36,7 @@
         }
 
         .status {
-            font-size: 1.5em;
+            font-size: 1.3em;
             margin-bottom: 30px;
             padding: 20px;
             border-radius: 15px;
@@ -64,39 +64,27 @@
         }
 
         .claude-indicator.listening {
-            animation: pulseListening 2s infinite;
+            animation: pulseRed 2s infinite;
             background: rgba(255,107,107,0.3);
             border-color: #ff6b6b;
         }
 
-        .claude-indicator.responding {
-            animation: pulseResponding 1s infinite;
+        .claude-indicator.speaking {
+            animation: pulse 1s infinite;
             background: rgba(76,175,80,0.3);
             border-color: #4caf50;
         }
 
-        .claude-indicator.processing {
-            animation: pulseProcessing 1.5s infinite;
-            background: rgba(255,193,7,0.3);
-            border-color: #ffc107;
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(76,175,80,0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(76,175,80,0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(76,175,80,0); }
         }
 
-        @keyframes pulseListening {
+        @keyframes pulseRed {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,107,107,0.7); }
             70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255,107,107,0); }
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,107,107,0); }
-        }
-
-        @keyframes pulseResponding {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes pulseProcessing {
-            0% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.05) rotate(180deg); }
-            100% { transform: scale(1) rotate(360deg); }
         }
 
         .controls {
@@ -109,33 +97,29 @@
 
         button {
             padding: 15px 30px;
-            font-size: 1.1em;
+            font-size: 1.2em;
             border: none;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
             font-weight: bold;
+            min-width: 150px;
         }
 
-        .start-btn {
+        .listen-btn {
             background: linear-gradient(45deg, #4caf50, #45a049);
             color: white;
         }
 
-        .start-btn:hover {
+        .listen-btn:hover {
             transform: scale(1.05);
             box-shadow: 0 8px 25px rgba(76,175,80,0.4);
         }
 
-        .stop-btn {
-            background: linear-gradient(45deg, #f44336, #d32f2f);
-            color: white;
-        }
-
-        .stop-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(244,67,54,0.4);
+        .listen-btn:active {
+            transform: scale(0.95);
+            background: linear-gradient(45deg, #45a049, #388e3c);
         }
 
         .test-btn {
@@ -155,26 +139,16 @@
             margin-top: 20px;
             backdrop-filter: blur(15px);
             border: 1px solid rgba(255,255,255,0.2);
-            min-height: 200px;
+            min-height: 150px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .response-text {
-            font-size: 1.4em;
+            font-size: 1.3em;
             line-height: 1.6;
-            text-align: left;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .wake-word-display {
-            font-size: 1.8em;
-            color: #ff6b6b;
-            font-weight: bold;
-            margin: 20px 0;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-align: center;
         }
 
         .volume-controls {
@@ -205,50 +179,6 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
 
-        .error {
-            color: #ff6b6b;
-            background: rgba(255,107,107,0.1);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
-            border: 1px solid rgba(255,107,107,0.3);
-        }
-
-        .success {
-            color: #4caf50;
-            background: rgba(76,175,80,0.1);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
-            border: 1px solid rgba(76,175,80,0.3);
-        }
-
-        .conversation-log {
-            background: rgba(0,0,0,0.2);
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-            max-height: 300px;
-            overflow-y: auto;
-            text-align: left;
-        }
-
-        .conversation-entry {
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 10px;
-        }
-
-        .user-entry {
-            background: rgba(255,255,255,0.1);
-            border-left: 4px solid #2196f3;
-        }
-
-        .claude-entry {
-            background: rgba(255,255,255,0.05);
-            border-left: 4px solid #4caf50;
-        }
-
         .debug-info {
             background: rgba(0,0,0,0.3);
             border-radius: 10px;
@@ -257,41 +187,68 @@
             font-size: 0.9em;
             text-align: left;
             font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .error {
+            color: #ff6b6b;
+            background: rgba(255,107,107,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 5px 0;
+            border: 1px solid rgba(255,107,107,0.3);
+        }
+
+        .success {
+            color: #4caf50;
+            background: rgba(76,175,80,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 5px 0;
+            border: 1px solid rgba(76,175,80,0.3);
+        }
+
+        .instructions {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            font-size: 1.1em;
+            line-height: 1.5;
         }
 
         @media (max-width: 600px) {
             h1 { font-size: 2em; }
             .claude-indicator { width: 120px; height: 120px; font-size: 3em; }
-            button { padding: 12px 25px; font-size: 1em; }
-            .response-text { font-size: 1.2em; }
+            button { padding: 12px 20px; font-size: 1em; min-width: 120px; }
+            .response-text { font-size: 1.1em; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🤖 Claude - Asistente Inteligente</h1>
+        <h1>🤖 Claude - Asistente Simple</h1>
         
-        <div class="claude-indicator" id="claudeIndicator">
-            🎤
-        </div>
-
-        <div class="wake-word-display">
-            Di: <strong>"Hola Claude"</strong> para comenzar
-        </div>
+        <div class="claude-indicator" id="claudeIndicator">🎤</div>
         
         <div class="status" id="status">
-            Presiona "Iniciar" para que Claude comience a escuchar siempre
+            Presiona "Test Micrófono" primero, luego mantén presionado "Hablar" mientras hablas
         </div>
 
         <div class="controls">
-            <button class="start-btn" id="startBtn">🚀 Iniciar Claude</button>
-            <button class="stop-btn" id="stopBtn" style="display: none;">⏹️ Detener</button>
-            <button class="test-btn" id="testBtn">🎤 Test Audio</button>
+            <button class="test-btn" id="testBtn">🔧 Test Micrófono</button>
+            <button class="listen-btn" id="listenBtn">🎤 Mantén Para Hablar</button>
         </div>
 
         <div class="response-area">
             <div class="response-text" id="responseText">
-                Una vez iniciado, Claude estará siempre escuchando. Solo di "Hola Claude" seguido de tu pregunta, como: "Hola Claude, ¿qué hora es?" o "Hola Claude, cuéntame un chiste".
+                <strong>INSTRUCCIONES SIMPLES:</strong><br><br>
+                1️⃣ Presiona "Test Micrófono" y permite el acceso<br>
+                2️⃣ Mantén presionado "Mantén Para Hablar"<br>
+                3️⃣ Habla tu pregunta mientras mantienes presionado<br>
+                4️⃣ Suelta el botón cuando termines<br><br>
+                ¡Es como un walkie-talkie!
             </div>
         </div>
 
@@ -301,447 +258,462 @@
             <span id="volumeDisplay">80%</span>
         </div>
 
-        <div class="conversation-log" id="conversationLog" style="display: none;">
-            <h3>📝 Conversación:</h3>
-            <div id="logEntries"></div>
+        <div class="instructions">
+            <strong>🗣️ Ejemplos de preguntas:</strong><br>
+            • "¿Qué hora es?"<br>
+            • "Cuéntame un chiste"<br>
+            • "¿Cómo estás?"<br>
+            • "¿Qué día es hoy?"<br>
+            • "Háblame del clima"
         </div>
 
-        <div class="debug-info" id="debugInfo" style="display: none;">
-            <h4>🔧 Info de Debug:</h4>
-            <div id="debugContent"></div>
+        <div class="debug-info" id="debugInfo">
+            <strong>📋 Log del sistema:</strong><br>
+            <div id="debugContent">Iniciando sistema...</div>
         </div>
     </div>
 
     <script>
-        class AutoClaudeVoiceAssistant {
+        class SimpleClaudeAssistant {
             constructor() {
-                this.isActive = false;
-                this.isListening = false;
-                this.isSpeaking = false;
-                this.isProcessing = false;
                 this.recognition = null;
                 this.synthesis = window.speechSynthesis;
                 this.volume = 0.8;
-                this.wakeWords = ['hola claude', 'claude', 'oye claude'];
-                this.conversationHistory = [];
-                this.debugMode = true;
-                this.recognitionAttempts = 0;
-                this.maxRecognitionAttempts = 5;
+                this.isListening = false;
+                this.isSpeaking = false;
+                this.spanishVoice = null;
                 
                 this.initElements();
-                this.initSpeechRecognition();
-                this.initEventListeners();
+                this.setupSpeechRecognition();
                 this.setupVoiceSettings();
-                this.detectBrowserCapabilities();
+                this.initEventListeners();
+                this.logDebug('✅ Sistema iniciado correctamente');
+                this.checkCapabilities();
             }
 
             initElements() {
-                this.startBtn = document.getElementById('startBtn');
-                this.stopBtn = document.getElementById('stopBtn');
+                this.listenBtn = document.getElementById('listenBtn');
                 this.testBtn = document.getElementById('testBtn');
                 this.status = document.getElementById('status');
                 this.responseText = document.getElementById('responseText');
                 this.claudeIndicator = document.getElementById('claudeIndicator');
                 this.volumeSlider = document.getElementById('volumeSlider');
                 this.volumeDisplay = document.getElementById('volumeDisplay');
-                this.conversationLog = document.getElementById('conversationLog');
-                this.logEntries = document.getElementById('logEntries');
-                this.debugInfo = document.getElementById('debugInfo');
                 this.debugContent = document.getElementById('debugContent');
+                
+                this.logDebug('✅ Elementos DOM cargados');
             }
 
-            detectBrowserCapabilities() {
-                const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            checkCapabilities() {
+                const userAgent = navigator.userAgent;
+                const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
+                const isIOS = /iPad|iPhone|iPod/.test(userAgent);
                 
-                this.logDebug(`Navegador: ${navigator.userAgent}`);
-                this.logDebug(`Safari: ${isSafari}, iOS: ${isIOS}`);
-                this.logDebug(`SpeechRecognition disponible: ${'webkitSpeechRecognition' in window || 'SpeechRecognition' in window}`);
-                this.logDebug(`SpeechSynthesis disponible: ${'speechSynthesis' in window}`);
+                this.logDebug(`🌐 Navegador: ${isSafari ? 'Safari' : 'Otro'}`);
+                this.logDebug(`📱 iOS: ${isIOS ? 'Sí' : 'No'}`);
+                this.logDebug(`🎤 SpeechRecognition: ${'webkitSpeechRecognition' in window || 'SpeechRecognition' in window ? 'Disponible' : 'No disponible'}`);
+                this.logDebug(`🔊 SpeechSynthesis: ${'speechSynthesis' in window ? 'Disponible' : 'No disponible'}`);
                 
-                if (this.debugMode) {
-                    this.debugInfo.style.display = 'block';
+                if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                    this.showError('❌ Tu navegador no soporta reconocimiento de voz');
+                    this.listenBtn.disabled = true;
                 }
             }
 
-            initSpeechRecognition() {
-                // Intentar con ambas versiones
-                if ('webkitSpeechRecognition' in window) {
-                    this.recognition = new webkitSpeechRecognition();
-                    this.logDebug('Usando webkitSpeechRecognition');
-                } else if ('SpeechRecognition' in window) {
-                    this.recognition = new SpeechRecognition();
-                    this.logDebug('Usando SpeechRecognition');
-                } else {
-                    this.showError('Tu navegador no soporta reconocimiento de voz. Safari en iOS necesita permisos especiales.');
-                    this.logDebug('SpeechRecognition no disponible');
-                    return;
-                }
+            setupSpeechRecognition() {
+                try {
+                    if ('webkitSpeechRecognition' in window) {
+                        this.recognition = new webkitSpeechRecognition();
+                        this.logDebug('🎤 Usando webkitSpeechRecognition');
+                    } else if ('SpeechRecognition' in window) {
+                        this.recognition = new SpeechRecognition();
+                        this.logDebug('🎤 Usando SpeechRecognition');
+                    } else {
+                        throw new Error('SpeechRecognition no disponible');
+                    }
 
-                // Configuración optimizada para Safari
-                this.recognition.continuous = false; // Cambiar a false para Safari
-                this.recognition.interimResults = true;
-                this.recognition.lang = 'es-ES';
-                this.recognition.maxAlternatives = 1;
+                    // Configuración simple para Safari
+                    this.recognition.continuous = false;
+                    this.recognition.interimResults = true;
+                    this.recognition.lang = 'es-ES';
+                    this.recognition.maxAlternatives = 1;
 
-                this.recognition.onstart = () => {
-                    this.isListening = true;
-                    this.recognitionAttempts = 0;
-                    this.logDebug('Reconocimiento iniciado');
-                    this.updateIndicator();
-                    this.updateStatus('🎤 Escuchando activamente...');
-                };
+                    this.recognition.onstart = () => {
+                        this.isListening = true;
+                        this.claudeIndicator.classList.add('listening');
+                        this.claudeIndicator.textContent = '👂';
+                        this.updateStatus('🎤 Escuchando... habla ahora');
+                        this.logDebug('🎤 Reconocimiento iniciado');
+                    };
 
-                this.recognition.onresult = (event) => {
-                    this.logDebug(`Resultado recibido. Eventos: ${event.results.length}`);
-                    
-                    let finalTranscript = '';
-                    let interimTranscript = '';
+                    this.recognition.onresult = (event) => {
+                        let transcript = '';
+                        let isFinal = false;
 
-                    for (let i = event.resultIndex; i < event.results.length; i++) {
-                        const transcript = event.results[i][0].transcript;
-                        const confidence = event.results[i][0].confidence;
-                        
-                        this.logDebug(`Transcripción ${i}: "${transcript}" (confianza: ${confidence})`);
-                        
-                        if (event.results[i].isFinal) {
-                            finalTranscript += transcript;
-                        } else {
-                            interimTranscript += transcript;
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            transcript += event.results[i][0].transcript;
+                            if (event.results[i].isFinal) {
+                                isFinal = true;
+                            }
                         }
-                    }
 
-                    // Mostrar transcripción en tiempo real
-                    if (interimTranscript) {
-                        this.updateStatus(`🎤 Escuchando: "${interimTranscript}"`);
-                    }
+                        this.logDebug(`📝 Transcripción: "${transcript}" (final: ${isFinal})`);
+                        
+                        if (transcript.trim()) {
+                            this.updateStatus(`Escuché: "${transcript}"`);
+                            
+                            if (isFinal) {
+                                this.processUserInput(transcript.trim());
+                            }
+                        }
+                    };
 
-                    if (finalTranscript) {
-                        this.logDebug(`Transcripción final: "${finalTranscript}"`);
-                        this.processTranscript(finalTranscript.toLowerCase().trim());
-                    }
-                };
+                    this.recognition.onerror = (event) => {
+                        this.logDebug(`❌ Error: ${event.error}`);
+                        this.isListening = false;
+                        this.claudeIndicator.classList.remove('listening');
+                        this.claudeIndicator.textContent = '🎤';
+                        
+                        let errorMsg = '';
+                        switch(event.error) {
+                            case 'no-speech':
+                                errorMsg = '❌ No se detectó voz. Intenta hablar más fuerte.';
+                                break;
+                            case 'audio-capture':
+                                errorMsg = '❌ No se puede acceder al micrófono. Verifica los permisos.';
+                                break;
+                            case 'not-allowed':
+                                errorMsg = '❌ Permisos de micrófono denegados. Permite el acceso.';
+                                break;
+                            case 'network':
+                                errorMsg = '❌ Error de conexión. Verifica tu internet.';
+                                break;
+                            default:
+                                errorMsg = `❌ Error: ${event.error}`;
+                        }
+                        
+                        this.updateStatus(errorMsg);
+                    };
 
-                this.recognition.onerror = (event) => {
-                    this.logDebug(`Error en reconocimiento: ${event.error}`);
-                    this.isListening = false;
-                    
-                    switch(event.error) {
-                        case 'no-speech':
-                            this.updateStatus('⏳ No se detectó voz. Reintentando...');
-                            break;
-                        case 'audio-capture':
-                            this.showError('No se puede acceder al micrófono. Verifica los permisos.');
-                            break;
-                        case 'not-allowed':
-                            this.showError('Permisos de micrófono denegados. Permite el acceso al micrófono.');
-                            break;
-                        case 'network':
-                            this.updateStatus('🌐 Error de red. Reintentando...');
-                            break;
-                        default:
-                            this.updateStatus(`❌ Error: ${event.error}. Reintentando...`);
-                    }
-                    
-                    if (this.isActive && this.recognitionAttempts < this.maxRecognitionAttempts) {
-                        setTimeout(() => this.restartListening(), 2000);
-                    }
-                };
+                    this.recognition.onend = () => {
+                        this.isListening = false;
+                        this.claudeIndicator.classList.remove('listening');
+                        this.claudeIndicator.textContent = '🎤';
+                        this.logDebug('🎤 Reconocimiento terminado');
+                        
+                        if (!this.isSpeaking) {
+                            this.updateStatus('✅ Listo para escuchar de nuevo');
+                        }
+                    };
 
-                this.recognition.onend = () => {
-                    this.isListening = false;
-                    this.logDebug('Reconocimiento terminado');
-                    
-                    if (this.isActive && !this.isProcessing) {
-                        // En Safari, reiniciar más frecuentemente
-                        setTimeout(() => this.restartListening(), 1000);
-                    }
-                    
-                    this.updateIndicator();
-                };
-            }
+                    this.logDebug('✅ Reconocimiento de voz configurado');
 
-            initEventListeners() {
-                this.startBtn.addEventListener('click', () => this.startClaude());
-                this.stopBtn.addEventListener('click', () => this.stopClaude());
-                this.testBtn.addEventListener('click', () => this.testAudioCapabilities());
-                
-                this.volumeSlider.addEventListener('input', (e) => {
-                    this.volume = parseFloat(e.target.value);
-                    this.volumeDisplay.textContent = Math.round(this.volume * 100) + '%';
-                });
-
-                // Solicitar permisos al hacer clic en cualquier parte
-                document.addEventListener('click', () => {
-                    this.requestMicrophonePermission();
-                }, { once: true });
-
-                window.addEventListener('beforeunload', (e) => {
-                    if (this.isActive) {
-                        e.preventDefault();
-                        e.returnValue = '';
-                    }
-                });
-            }
-
-            async requestMicrophonePermission() {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    stream.getTracks().forEach(track => track.stop());
-                    this.logDebug('Permisos de micrófono concedidos');
-                    this.showSuccess('✅ Permisos de micrófono concedidos');
                 } catch (error) {
-                    this.logDebug(`Error al solicitar permisos: ${error.message}`);
-                    this.showError('❌ Necesitas permitir el acceso al micrófono para usar el asistente de voz');
-                }
-            }
-
-            async testAudioCapabilities() {
-                this.updateStatus('🔧 Probando capacidades de audio...');
-                
-                try {
-                    // Test del micrófono
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    this.showSuccess('✅ Micrófono funcionando correctamente');
-                    
-                    // Test de síntesis de voz
-                    this.speakResponse('Prueba de audio exitosa. El micrófono y el altavoz funcionan correctamente.');
-                    
-                    stream.getTracks().forEach(track => track.stop());
-                    
-                    // Test de reconocimiento
-                    if (this.recognition) {
-                        this.logDebug('Iniciando test de reconocimiento...');
-                        setTimeout(() => {
-                            this.recognition.start();
-                            setTimeout(() => {
-                                if (this.recognition) {
-                                    this.recognition.stop();
-                                }
-                            }, 3000);
-                        }, 2000);
-                    }
-                    
-                } catch (error) {
-                    this.showError(`❌ Error en test de audio: ${error.message}`);
-                    this.logDebug(`Error en test: ${error}`);
+                    this.logDebug(`❌ Error al configurar reconocimiento: ${error.message}`);
+                    this.showError('❌ Error al configurar el reconocimiento de voz');
                 }
             }
 
             setupVoiceSettings() {
-                this.synthesis.onvoiceschanged = () => {
+                const loadVoices = () => {
                     const voices = this.synthesis.getVoices();
-                    this.logDebug(`Voces disponibles: ${voices.length}`);
+                    this.logDebug(`🔊 Voces disponibles: ${voices.length}`);
                     
                     // Buscar voz en español
                     this.spanishVoice = voices.find(voice => 
-                        voice.lang.includes('es') && (voice.name.includes('Google') || voice.name.includes('Mónica') || voice.name.includes('Diego'))
+                        voice.lang.startsWith('es') && voice.name.includes('Google')
                     ) || voices.find(voice => 
-                        voice.lang.includes('es')
+                        voice.lang.startsWith('es')
                     ) || voices[0];
                     
                     if (this.spanishVoice) {
-                        this.logDebug(`Voz seleccionada: ${this.spanishVoice.name} (${this.spanishVoice.lang})`);
+                        this.logDebug(`🔊 Voz seleccionada: ${this.spanishVoice.name} (${this.spanishVoice.lang})`);
+                    } else {
+                        this.logDebug('⚠️ No se encontró voz en español, usando voz por defecto');
                     }
                 };
-                
-                // Cargar voces inmediatamente si están disponibles
+
                 if (this.synthesis.getVoices().length > 0) {
-                    this.synthesis.onvoiceschanged();
+                    loadVoices();
+                } else {
+                    this.synthesis.onvoiceschanged = loadVoices;
                 }
             }
 
-            startClaude() {
-                this.isActive = true;
-                this.startBtn.style.display = 'none';
-                this.stopBtn.style.display = 'inline-block';
-                this.conversationLog.style.display = 'block';
-                
-                this.updateStatus('🎤 Claude está activo. Solicitando permisos...');
-                this.logDebug('Claude iniciado');
-                
-                // Solicitar permisos explícitamente
-                this.requestMicrophonePermission().then(() => {
-                    this.startListening();
-                    
-                    // Saludo inicial
-                    setTimeout(() => {
-                        this.speakResponse('Hola, soy Claude. Estoy listo para ayudarte. Solo di "Hola Claude" seguido de tu pregunta y te responderé.');
-                    }, 1000);
+            initEventListeners() {
+                this.logDebug('🔧 Configurando event listeners...');
+
+                // Test de micrófono
+                this.testBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.logDebug('🔧 Test de micrófono iniciado por el usuario');
+                    this.testMicrophone();
                 });
+
+                // Sistema de mantener presionado para hablar - MOUSE
+                this.listenBtn.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    this.logDebug('🖱️ Mouse down - iniciando escucha');
+                    this.startListening();
+                });
+
+                this.listenBtn.addEventListener('mouseup', (e) => {
+                    e.preventDefault();
+                    this.logDebug('🖱️ Mouse up - deteniendo escucha');
+                    this.stopListening();
+                });
+
+                this.listenBtn.addEventListener('mouseleave', (e) => {
+                    if (this.isListening) {
+                        this.logDebug('🖱️ Mouse leave - deteniendo escucha');
+                        this.stopListening();
+                    }
+                });
+
+                // Sistema de mantener presionado para hablar - TOUCH
+                this.listenBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.logDebug('👆 Touch start - iniciando escucha');
+                    this.startListening();
+                });
+
+                this.listenBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.logDebug('👆 Touch end - deteniendo escucha');
+                    this.stopListening();
+                });
+
+                this.listenBtn.addEventListener('touchcancel', (e) => {
+                    e.preventDefault();
+                    this.logDebug('👆 Touch cancel - deteniendo escucha');
+                    this.stopListening();
+                });
+
+                // Control de volumen
+                this.volumeSlider.addEventListener('input', (e) => {
+                    this.volume = parseFloat(e.target.value);
+                    this.volumeDisplay.textContent = Math.round(this.volume * 100) + '%';
+                    this.logDebug(`🔊 Volumen cambiado a: ${Math.round(this.volume * 100)}%`);
+                });
+
+                // Solicitar permisos al primer clic
+                document.addEventListener('click', () => {
+                    this.requestPermissions();
+                }, { once: true });
+
+                this.logDebug('✅ Event listeners configurados');
             }
 
-            stopClaude() {
-                this.isActive = false;
-                this.isProcessing = false;
-                this.startBtn.style.display = 'inline-block';
-                this.stopBtn.style.display = 'none';
-                
-                if (this.recognition) {
-                    this.recognition.stop();
+            async requestPermissions() {
+                try {
+                    this.logDebug('🔐 Solicitando permisos de micrófono...');
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    stream.getTracks().forEach(track => track.stop());
+                    this.logDebug('✅ Permisos de micrófono concedidos');
+                    this.showSuccess('✅ Permisos de micrófono concedidos');
+                } catch (error) {
+                    this.logDebug(`❌ Error permisos: ${error.message}`);
+                    this.showError('❌ Necesitas permitir el acceso al micrófono para usar el asistente');
                 }
+            }
+
+            async testMicrophone() {
+                this.updateStatus('🔧 Probando micrófono...');
+                this.logDebug('🔧 Iniciando test de micrófono');
                 
-                if (this.synthesis.speaking) {
-                    this.synthesis.cancel();
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    this.logDebug('✅ Stream de audio obtenido');
+                    this.showSuccess('✅ Micrófono funcionando correctamente');
+                    this.speak('Perfecto. Tu micrófono está funcionando correctamente. Ahora puedes usar el botón de hablar.');
+                    
+                    stream.getTracks().forEach(track => track.stop());
+                    this.logDebug('✅ Stream cerrado');
+                    
+                } catch (error) {
+                    this.logDebug(`❌ Error en test: ${error.message}`);
+                    let errorMsg = '';
+                    switch(error.name) {
+                        case 'NotAllowedError':
+                            errorMsg = 'Permisos denegados. Permite el acceso al micrófono en la configuración del navegador.';
+                            break;
+                        case 'NotFoundError':
+                            errorMsg = 'No se encontró micrófono. Verifica que esté conectado.';
+                            break;
+                        default:
+                            errorMsg = error.message;
+                    }
+                    this.showError(`❌ Error: ${errorMsg}`);
                 }
-                
-                this.updateStatus('Claude detenido. Presiona "Iniciar" para reactivar.');
-                this.updateIndicator();
-                this.logDebug('Claude detenido');
             }
 
             startListening() {
-                if (!this.recognition || !this.isActive) return;
-                
-                this.recognitionAttempts++;
-                this.logDebug(`Intento de reconocimiento #${this.recognitionAttempts}`);
-                
-                try {
-                    this.recognition.start();
-                } catch (error) {
-                    this.logDebug(`Error al iniciar reconocimiento: ${error.message}`);
-                    if (error.name !== 'InvalidStateError') {
-                        setTimeout(() => this.restartListening(), 2000);
-                    }
-                }
-            }
-
-            restartListening() {
-                if (!this.isActive || this.recognitionAttempts >= this.maxRecognitionAttempts) {
-                    if (this.recognitionAttempts >= this.maxRecognitionAttempts) {
-                        this.showError('Demasiados intentos fallidos. Presiona "Test Audio" para verificar el micrófono.');
-                        this.recognitionAttempts = 0;
-                    }
+                if (!this.recognition || this.isListening || this.isSpeaking) {
+                    this.logDebug('⚠️ No se puede iniciar escucha: recognition=' + !!this.recognition + ', isListening=' + this.isListening + ', isSpeaking=' + this.isSpeaking);
                     return;
                 }
                 
-                this.logDebug('Reiniciando reconocimiento...');
-                setTimeout(() => this.startListening(), 1500);
-            }
-
-            processTranscript(transcript) {
-                this.logDebug(`Procesando: "${transcript}"`);
-                
-                // Buscar palabra de activación
-                const hasWakeWord = this.wakeWords.some(wake => transcript.includes(wake));
-                
-                if (hasWakeWord && !this.isProcessing) {
-                    this.isProcessing = true;
-                    this.claudeIndicator.classList.add('processing');
-                    
-                    // Extraer el comando después de la palabra de activación
-                    let command = transcript;
-                    this.wakeWords.forEach(wake => {
-                        if (transcript.includes(wake)) {
-                            command = transcript.replace(wake, '').trim();
-                        }
-                    });
-
-                    this.logDebug(`Comando extraído: "${command}"`);
-
-                    if (command.length > 0) {
-                        this.updateStatus(`🗣️ Escuché: "${command}"`);
-                        this.addToConversation('user', command);
-                        this.processUserCommand(command);
+                try {
+                    this.recognition.start();
+                    this.logDebug('🎤 Iniciando escucha...');
+                } catch (error) {
+                    this.logDebug(`❌ Error al iniciar: ${error.message}`);
+                    if (error.name === 'InvalidStateError') {
+                        this.logDebug('⚠️ Reconocimiento ya está activo');
                     } else {
-                        this.updateStatus('👋 Hola, ¿en qué puedo ayudarte?');
-                        this.speakResponse('Hola, ¿en qué puedo ayudarte?');
-                        this.isProcessing = false;
-                        this.updateIndicator();
+                        this.showError('❌ Error al iniciar el reconocimiento');
                     }
-                } else if (transcript.length > 0) {
-                    // Proporcionar feedback incluso sin palabra de activación
-                    this.updateStatus(`🎤 Escuché: "${transcript}" (sin palabra de activación)`);
-                    this.logDebug(`Sin palabra de activación en: "${transcript}"`);
                 }
             }
 
-            async processUserCommand(command) {
-                this.updateStatus('🤔 Procesando tu solicitud...');
-                this.logDebug(`Procesando comando: "${command}"`);
+            stopListening() {
+                if (!this.recognition || !this.isListening) {
+                    this.logDebug('⚠️ No se puede parar escucha: recognition=' + !!this.recognition + ', isListening=' + this.isListening);
+                    return;
+                }
                 
                 try {
-                    const response = await this.generateClaudeResponse(command);
-                    this.displayResponse(response);
-                    this.addToConversation('claude', response);
-                    this.speakResponse(response);
+                    this.recognition.stop();
+                    this.logDebug('🛑 Deteniendo escucha...');
                 } catch (error) {
-                    this.showError('Error al procesar tu solicitud');
-                    this.logDebug(`Error en procesamiento: ${error}`);
-                    this.isProcessing = false;
-                    this.updateIndicator();
+                    this.logDebug(`❌ Error al detener: ${error.message}`);
                 }
             }
 
-            async generateClaudeResponse(input) {
-                this.logDebug(`Generando respuesta para: "${input}"`);
+            processUserInput(input) {
+                this.logDebug(`🤔 Procesando entrada del usuario: "${input}"`);
+                this.updateStatus('🤔 Procesando tu pregunta...');
                 
-                const lowerInput = input.toLowerCase();
-                
-                const responses = {
-                    saludo: [
-                        "¡Hola! Me alegra poder conversar contigo. ¿Cómo estás hoy?",
-                        "¡Qué gusto saludarte! ¿En qué puedo ayudarte?",
-                        "¡Hola! Estoy aquí para lo que necesites."
-                    ],
-                    
-                    hora: `Son las ${new Date().toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}`,
-                    fecha: `Hoy es ${new Date().toLocaleDateString('es-ES', { 
-                        weekday: 'long', 
-                        day: 'numeric',
-                        month: 'long'
-                    })}`,
-                    
-                    clima: [
-                        "Según mis datos, hoy está soleado con 22 grados. Perfecto para salir.",
-                        "El clima está agradable hoy, cielo despejado y temperatura templada.",
-                        "Hoy hace buen tiempo, ideal para dar un paseo."
-                    ],
-                    
-                    chistes: [
-                        "¿Por qué los pájaros vuelan hacia el sur en invierno? Porque caminando tardarían mucho más.",
-                        "¿Qué le dice un semáforo a otro? No me mires que me estoy cambiando.",
-                        "¿Cómo se llama el campeón de buceo japonés? Tokofondo.",
-                        "¿Por qué los peces no pagan deudas? Porque siempre están sin un peso."
-                    ],
-                    
-                    animo: [
-                        "¡Estoy muy bien, gracias por preguntar! Listo para ayudarte en lo que necesites.",
-                        "Me siento genial hoy, con muchas ganas de conversar contigo.",
-                        "Estoy perfecto, siempre es un placer poder hablar contigo."
-                    ],
-                    
-                    despedida: [
-                        "¡Hasta luego! Ha sido un gusto conversar contigo.",
-                        "¡Que tengas un día maravilloso! Aquí estaré cuando me necesites.",
-                        "¡Adiós! Fue un placer ayudarte hoy."
-                    ]
-                };
+                const response = this.generateResponse(input.toLowerCase());
+                this.displayResponse(response);
+                this.speak(response);
+            }
 
-                // Análisis más sofisticado del input
-                let response = '';
+            generateResponse(input) {
+                this.logDebug(`🧠 Generando respuesta para: "${input}"`);
                 
-                if (lowerInput.includes('hola') || lowerInput.includes('buenos días') || lowerInput.includes('buenas tardes')) {
-                    response = this.getRandomResponse(responses.saludo);
-                } else if (lowerInput.includes('hora') || lowerInput.includes('qué hora')) {
-                    response = responses.hora;
-                } else if (lowerInput.includes('fecha') || lowerInput.includes('día es') || lowerInput.includes('qué día')) {
-                    response = responses.fecha;
-                } else if (lowerInput.includes('clima') || lowerInput.includes('tiempo hace') || lowerInput.includes('temperatura')) {
-                    response = this.getRandomResponse(responses.clima);
-                } else if (lowerInput.includes('chiste') || lowerInput.includes('gracioso') || lowerInput.includes('algo divertido')) {
-                    response = this.getRandomResponse(responses.chistes);
-                } else if (lowerInput.includes('cómo estás') || lowerInput.includes('cómo te sientes') || lowerInput.includes('qué tal')) {
-                    response = this.getRandomResponse(responses.animo);
-                } else if (lowerInput.includes('adiós') || lowerInput.includes('hasta luego') || lowerInput.includes('chau') || lowerInput.includes('nos vemos')) {
-                    response = this.getRandomResponse(responses.despedida);
-                } else if (lowerInput.includes('gracias')) {
-                    response = "¡De nada! Es un placer poder ayudarte. ¿Hay algo más en lo que pueda asistirte?";
-                } else if (lowerInput.includes('ayuda') || lowerInput.includes('qué puedes hacer')) {
-                    response = "Puedo ayudarte con muchas cosas: decirte la hora, contarte chistes, conversar contigo, darte información básica. Solo di 'Hola Claude' seguido de lo que necesites.";
-                } else {
-                    response = `Entiendo que me dices "${input}". Aunque soy una versión simulada, estoy aquí para conversar contigo. ¿Podrías ser más específico sobre lo que necesitas?`;
+                // Respuestas simples
+                if (input.includes('hora')) {
+                    return `Son las ${new Date().toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}`;
                 }
                 
-                this.logDebug(`Respuesta generada: "${response}"`);
-                return response;
+                if (input.includes('fecha') || input.includes('día')) {
+                    return `Hoy es ${new Date().toLocaleDateString('es-ES', { 
+                        weekday: 'long', day: 'numeric', month: 'long' 
+                    })}`;
+                }
+                
+                if (input.includes('chiste')) {
+                    const chistes = [
+                        "¿Por qué los pájaros vuelan hacia el sur en invierno? Porque caminando tardarían mucho más.",
+                        "¿Qué le dice un semáforo a otro? No me mires que me estoy cambiando.",
+                        "¿Cómo se llama el campeón de buceo japonés? Tokofondo."
+                    ];
+                    return chistes[Math.floor(Math.random() * chistes.length)];
+                }
+                
+                if (input.includes('cómo estás') || input.includes('qué tal')) {
+                    return "Estoy muy bien, gracias por preguntar. Listo para ayudarte con lo que necesites.";
+                }
+                
+                if (input.includes('clima') || input.includes('tiempo')) {
+                    return "No tengo acceso a datos meteorológicos en tiempo real, pero espero que tengas un día soleado.";
+                }
+                
+                if (input.includes('hola') || input.includes('buenos días') || input.includes('buenas tardes')) {
+                    return "¡Hola! Un gusto saludarte. ¿En qué puedo ayudarte hoy?";
+                }
+                
+                if (input.includes('gracias')) {
+                    return "¡De nada! Es un placer poder ayudarte.";
+                }
+                
+                if (input.includes('adiós') || input.includes('hasta luego')) {
+                    return "¡Hasta luego! Que tengas un excelente día.";
+                }
+                
+                // Respuesta por defecto
+                return `Escuché que dijiste "${input}". Aunque soy una versión simple, puedo ayudarte con la hora, chistes, saludos y más. ¿Qué más te gustaría saber?`;
+            }
+
+            displayResponse(response) {
+                this.responseText.textContent = response;
+                this.logDebug(`💬 Mostrando respuesta: "${response}"`);
+            }
+
+            speak(text) {
+                if (this.synthesis.speaking) {
+                    this.synthesis.cancel();
+                }
+
+                this.logDebug(`🗣️ Preparando para hablar: "${text}"`);
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                if (this.spanishVoice) {
+                    utterance.voice = this.spanishVoice;
+                }
+                utterance.volume = this.volume;
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+
+                utterance.onstart = () => {
+                    this.isSpeaking = true;
+                    this.claudeIndicator.classList.add('speaking');
+                    this.claudeIndicator.textContent = '🗣️';
+                    this.updateStatus('🗣️ Claude está hablando...');
+                    this.logDebug('🗣️ Síntesis de voz iniciada');
+                };
+
+                utterance.onend = () => {
+                    this.isSpeaking = false;
+                    this.claudeIndicator.classList.remove('speaking');
+                    this.claudeIndicator.textContent = '🎤';
+                    this.updateStatus('✅ Listo para la siguiente pregunta');
+                    this.logDebug('✅ Síntesis de voz completada');
+                };
+
+                utterance.onerror = (event) => {
+                    this.logDebug(`❌ Error en síntesis: ${event.error}`);
+                    this.isSpeaking = false;
+                    this.claudeIndicator.classList.remove('speaking');
+                    this.claudeIndicator.textContent = '🎤';
+                    this.updateStatus('❌ Error al reproducir audio');
+                };
+
+                this.synthesis.speak(utterance);
+            }
+
+            updateStatus(message) {
+                this.status.innerHTML = message;
+            }
+
+            showError(message) {
+                this.status.innerHTML = `<div class="error">${message}</div>`;
+            }
+
+            showSuccess(message) {
+                this.status.innerHTML = `<div class="success">${message}</div>`;
+            }
+
+            logDebug(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = `[${timestamp}] ${message}`;
+                console.log(logEntry);
+                
+                this.debugContent.innerHTML = logEntry + '<br>' + this.debugContent.innerHTML;
+                
+                // Mantener solo las últimas 15 entradas
+                const lines = this.debugContent.innerHTML.split('<br>');
+                if (lines.length > 15) {
+                    this.debugContent.innerHTML = lines.slice(0, 15).join('<br>');
+                }
+            }
+        }
+
+        // Inicializar cuando la página esté lista
+        document.addEventListener('DOMContentLoaded', () => {
+            new SimpleClaudeAssistant();
+        });
+    </script>
+</body>
+</html>
